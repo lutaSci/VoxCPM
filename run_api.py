@@ -20,6 +20,15 @@ Install dependencies with uv:
 import argparse
 import os
 import sys
+from pathlib import Path
+
+# ============================================================
+# 确保项目根目录在 Python path 中
+# 这是标准做法，确保在任何环境下都能正确导入 api 包
+# ============================================================
+PROJECT_ROOT = Path(__file__).parent.resolve()
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 
 def main():
