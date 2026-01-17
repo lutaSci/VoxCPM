@@ -15,7 +15,6 @@ generated/
 .env.local
 
 # Model files (large)
-models/
 
 # Logs
 *.log
