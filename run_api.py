@@ -14,21 +14,12 @@ Environment Variables:
     VOXCPM_MODEL_PATH   Path to local model directory
     VOXCPM_HF_MODEL_ID  HuggingFace model ID (default: openbmb/VoxCPM1.5)
 
-Install dependencies with uv:
-    uv pip install -e ".[api]"
+Install dependencies:
+    pip install -e ".[api]"
 """
 import argparse
 import os
 import sys
-from pathlib import Path
-
-# ============================================================
-# 确保项目根目录在 Python path 中
-# 这是标准做法，确保在任何环境下都能正确导入 api 包
-# ============================================================
-PROJECT_ROOT = Path(__file__).parent.resolve()
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
 
 
 def main():
@@ -53,10 +44,9 @@ def main():
     if args.workers:
         os.environ["VOXCPM_WORKER_COUNT"] = str(args.workers)
     
-    # Import after setting env vars and sys.path
+    # Import after setting env vars
     import uvicorn
     from api.config import settings
-    from api.main import app  # 直接导入 app 对象，避免 importlib 问题
     
     print("=" * 60)
     print("VoxCPM API Server")
@@ -72,14 +62,13 @@ def main():
     print(f"ReDoc:      http://{settings.host}:{settings.port}/redoc")
     print("=" * 60)
     
-    # 使用 app 对象而非字符串，确保在当前进程上下文中导入
     uvicorn.run(
-        app,  # 直接传入 app 对象
+        "api.main:app",
         host=settings.host,
         port=settings.port,
+        reload=settings.debug,
         log_level="debug" if settings.debug else "info",
-        # 注意：使用 app 对象时不能用 reload=True，需要用字符串形式
-        # workers=1 也不适用于 app 对象形式
+        workers=1,  # Must be 1 for GPU model (can't share across workers)
     )
 
 

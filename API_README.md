@@ -7,20 +7,39 @@
 ### 本地运行
 
 ```bash
-# 1. 安装 uv (如果还没有安装)
-curl -LsSf https://astral.sh/uv/install.sh | sh
+# 1. 安装依赖
+pip install -e ".[api]"
 
-# 2. 安装依赖 (包含 API 可选依赖)
-uv pip install -e ".[api]"
-
-# 3. 启动服务
-uv run python run_api.py
+# 2. 启动服务
+python run_api.py
 
 # 或指定端口
-uv run python run_api.py --port 8080
+python run_api.py --port 8080
 
 # 调试模式（自动重载）
-uv run python run_api.py --debug
+python run_api.py --debug
+```
+
+### 服务器守护进程运行
+
+```bash
+# 启动服务（后台运行）
+./scripts/start_api.sh start
+
+# 停止服务
+./scripts/start_api.sh stop
+
+# 重启服务
+./scripts/start_api.sh restart
+
+# 查看状态
+./scripts/start_api.sh status
+
+# 查看日志（实时）
+./scripts/start_api.sh logs
+
+# 查看最近 100 行日志
+./scripts/start_api.sh logs -n 100
 ```
 
 服务启动后访问：

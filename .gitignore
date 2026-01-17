@@ -14,8 +14,12 @@ generated/
 .env
 .env.local
 
-# Model files (large)
+# Model files (large) - 只忽略根目录的 models，不忽略 api/models
+/models/
 
 # Logs
 *.log
-logs/
+/logs/
+
+# PID files
+*.pid
