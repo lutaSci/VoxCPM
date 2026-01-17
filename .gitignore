@@ -1,0 +1,22 @@
+launch.json
+__pycache__
+voxcpm.egg-info
+.DS_Store
+.idea/
+
+# API generated files
+voices/
+generated/
+*.wav
+*.mp3
+
+# Environment
+.env
+.env.local
+
+# Model files (large)
+models/
+
+# Logs
+*.log
+logs/

@@ -1,0 +1,101 @@
+# VoxCPM API Docker Compose Configuration
+# Uses uv for fast Python package management
+#
+# Usage:
+#   docker-compose up -d        # Start service
+#   docker-compose logs -f      # View logs
+#   docker-compose down         # Stop service
+
+version: '3.8'
+
+services:
+  voxcpm-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: voxcpm-api
+    restart: unless-stopped
+    
+    # GPU support - requires NVIDIA Container Toolkit
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    
+    ports:
+      - "8000:8000"
+    
+    volumes:
+      # Persist voice profiles
+      - ./voices:/app/voices
+      # Persist generated audio (temporary, 24h expiry)
+      - ./generated:/app/generated
+      # Mount model directory (optional - can also download at runtime)
+      - ./models:/app/models
+      # Mount HuggingFace cache for model downloads
+      - ~/.cache/huggingface:/home/voxcpm/.cache/huggingface
+    
+    environment:
+      # Server settings
+      - VOXCPM_HOST=0.0.0.0
+      - VOXCPM_PORT=8000
+      - VOXCPM_DEBUG=false
+      
+      # Model settings
+      # Option 1: Use local model path (if pre-downloaded)
+      # - VOXCPM_MODEL_PATH=/app/models/VoxCPM1.5
+      # Option 2: Download from HuggingFace (default)
+      - VOXCPM_HF_MODEL_ID=openbmb/VoxCPM1.5
+      
+      # Denoiser settings (requires CUDA, enable on GPU servers)
+      - VOXCPM_ENABLE_DENOISER=true
+      - VOXCPM_ZIPENHANCER_MODEL_PATH=iic/speech_zipenhancer_ans_multiloss_16k_base
+      
+      # ASR settings
+      - VOXCPM_ASR_MODEL_ID=iic/SenseVoiceSmall
+      
+      # Storage settings
+      - VOXCPM_VOICES_DIR=/app/voices
+      - VOXCPM_GENERATED_AUDIO_DIR=/app/generated
+      
+      # TTS settings
+      - VOXCPM_DEFAULT_CFG_VALUE=2.0
+      - VOXCPM_DEFAULT_INFERENCE_TIMESTEPS=10
+      - VOXCPM_MAX_TEXT_LENGTH=5000
+      - VOXCPM_SPLIT_MAX_LENGTH=300
+      
+      # Cleanup settings
+      - VOXCPM_GENERATED_AUDIO_EXPIRE_HOURS=24
+      - VOXCPM_CLEANUP_INTERVAL_MINUTES=60
+      
+      # Queue settings
+      - VOXCPM_QUEUE_TYPE=memory
+      - VOXCPM_QUEUE_MAX_SIZE=100
+      - VOXCPM_WORKER_COUNT=1
+      
+      # CUDA settings
+      - NVIDIA_VISIBLE_DEVICES=all
+      - CUDA_VISIBLE_DEVICES=0
+    
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
+
+# Optional: Add Redis for distributed queue (future scaling)
+# redis:
+#   image: redis:7-alpine
+#   container_name: voxcpm-redis
+#   restart: unless-stopped
+#   ports:
+#     - "6379:6379"
+#   volumes:
+#     - redis_data:/data
+
+# volumes:
+#   redis_data:
