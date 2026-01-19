@@ -4,6 +4,21 @@
 
 ## 🚀 快速开始
 
+### 系统依赖
+
+在运行服务前，需要确保系统安装了以下依赖：
+
+```bash
+# Ubuntu/Debian
+sudo apt update && sudo apt install -y ffmpeg libsndfile1
+
+# macOS
+brew install ffmpeg libsndfile
+
+# AutoDL 等云平台
+apt update && apt install -y ffmpeg
+```
+
 ### 本地运行
 
 ```bash
