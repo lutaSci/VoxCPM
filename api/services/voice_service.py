@@ -58,7 +58,10 @@ class VoiceService:
         audio_data: bytes,
         voice_name: str,
         prompt_text: str,
-        audio_format: str = "wav"
+        audio_format: str = "wav",
+        description: str = "",
+        suitable_for: Optional[List[str]] = None,
+        for_podcast: bool = False,
     ) -> Dict[str, Any]:
         """
         Create a new voice profile.
@@ -68,6 +71,9 @@ class VoiceService:
             voice_name: Name for the voice
             prompt_text: Text corresponding to the audio
             audio_format: Audio file format (default: wav)
+            description: Voice description for Podcast (optional)
+            suitable_for: List of suitable scenarios (optional)
+            for_podcast: Whether this voice is suitable for Podcast
             
         Returns:
             Voice metadata dict
@@ -90,6 +96,10 @@ class VoiceService:
             "prompt_text": prompt_text,
             "audio_filename": audio_filename,
             "created_at": now.isoformat(),
+            # Podcast metadata (optional)
+            "description": description or "",
+            "suitable_for": suitable_for or [],
+            "for_podcast": for_podcast,
         }
         
         # Store metadata
@@ -167,6 +177,47 @@ class VoiceService:
     def voice_exists(self, voice_uuid: str) -> bool:
         """Check if a voice exists."""
         return voice_uuid in self._metadata
+    
+    def update_voice(
+        self,
+        voice_uuid: str,
+        voice_name: Optional[str] = None,
+        description: Optional[str] = None,
+        suitable_for: Optional[List[str]] = None,
+        for_podcast: Optional[bool] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Update voice metadata.
+        
+        Args:
+            voice_uuid: Voice UUID
+            voice_name: New voice name (optional)
+            description: New description (optional)
+            suitable_for: New suitable_for list (optional)
+            for_podcast: New for_podcast flag (optional)
+            
+        Returns:
+            Updated voice metadata dict or None if not found
+        """
+        if voice_uuid not in self._metadata:
+            return None
+        
+        with self._lock:
+            voice = self._metadata[voice_uuid]
+            
+            # Update only provided fields
+            if voice_name is not None:
+                voice["voice_name"] = voice_name
+            if description is not None:
+                voice["description"] = description
+            if suitable_for is not None:
+                voice["suitable_for"] = suitable_for
+            if for_podcast is not None:
+                voice["for_podcast"] = for_podcast
+            
+            self._save_metadata()
+        
+        return voice
 
 
 # Singleton instance

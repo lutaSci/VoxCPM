@@ -2,7 +2,7 @@
 Pydantic schemas for API request/response models
 """
 from datetime import datetime
-from typing import Optional, List, Literal
+from typing import Optional, List, Literal, Any
 from pydantic import BaseModel, Field
 
 
@@ -31,6 +31,88 @@ class VoiceListResponse(BaseModel):
     """Schema for voice list response"""
     voices: List[VoiceResponse] = Field(default_factory=list, description="音色列表")
     total: int = Field(..., description="总数")
+
+
+# ============== V2 API Schemas (Podcast) ==============
+
+class V2VoiceInfo(BaseModel):
+    """Schema for v2 voice info with Podcast metadata"""
+    voice_id: str = Field(..., description="音色 UUID")
+    voice_name: str = Field(..., description="音色名称")
+    description: str = Field("", description="音色描述")
+    suitable_for: List[str] = Field(default_factory=list, description="适用场景列表")
+    for_podcast: bool = Field(False, description="是否适用于 Podcast")
+    sample_audio_url: str = Field(..., description="示例音频 URL")
+
+
+class V2VoiceListData(BaseModel):
+    """Data wrapper for v2 voice list"""
+    voices: List[V2VoiceInfo] = Field(default_factory=list, description="音色列表")
+
+
+class V2VoiceListResponse(BaseModel):
+    """Schema for v2 voice list response"""
+    success: bool = Field(True, description="是否成功")
+    data: Optional[V2VoiceListData] = Field(None, description="响应数据")
+    error: Optional[str] = Field(None, description="错误信息")
+
+
+class PodcastSegmentInput(BaseModel):
+    """Schema for podcast segment input"""
+    segment_index: int = Field(..., ge=0, description="段落索引（从 0 开始）")
+    content: str = Field(..., min_length=1, description="段落文本内容")
+
+
+class PodcastGenerateRequest(BaseModel):
+    """Schema for podcast generation request"""
+    voice_id: str = Field(..., description="音色 UUID")
+    segments: List[PodcastSegmentInput] = Field(..., min_length=1, description="段落信息")
+    output_format: Literal["mp3", "wav"] = Field("mp3", description="输出格式")
+
+
+class PodcastSegmentTimeline(BaseModel):
+    """Schema for podcast segment timeline"""
+    segment_index: int = Field(..., description="段落索引")
+    start_time_ms: int = Field(..., description="开始时间（毫秒）")
+    end_time_ms: int = Field(..., description="结束时间（毫秒）")
+
+
+class PodcastGenerateData(BaseModel):
+    """Data wrapper for podcast generation result"""
+    audio_url: str = Field(..., description="音频下载链接")
+    audio_file_size: int = Field(..., description="音频文件大小（字节）")
+    duration_seconds: float = Field(..., description="总时长（秒）")
+    duration_ms: int = Field(..., description="总时长（毫秒）")
+    segments: List[PodcastSegmentTimeline] = Field(..., description="段落时间轴")
+
+
+class PodcastGenerateResponse(BaseModel):
+    """Schema for podcast generation response"""
+    success: bool = Field(True, description="是否成功")
+    data: Optional[PodcastGenerateData] = Field(None, description="响应数据")
+    error: Optional[str] = Field(None, description="错误信息")
+
+
+class V2ErrorResponse(BaseModel):
+    """Schema for v2 error response"""
+    success: bool = Field(False, description="是否成功")
+    data: None = Field(None, description="响应数据")
+    error: str = Field(..., description="错误信息")
+
+
+class VoiceUpdateRequest(BaseModel):
+    """Schema for voice update request"""
+    voice_name: Optional[str] = Field(None, min_length=1, max_length=100, description="音色名称")
+    description: Optional[str] = Field(None, description="音色描述")
+    suitable_for: Optional[List[str]] = Field(None, description="适用场景列表")
+    for_podcast: Optional[bool] = Field(None, description="是否适用于 Podcast")
+
+
+class V2VoiceUpdateResponse(BaseModel):
+    """Schema for v2 voice update response"""
+    success: bool = Field(True, description="是否成功")
+    data: Optional[V2VoiceInfo] = Field(None, description="更新后的音色信息")
+    error: Optional[str] = Field(None, description="错误信息")
 
 
 class VoiceDeleteResponse(BaseModel):

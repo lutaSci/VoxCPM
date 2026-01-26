@@ -28,12 +28,15 @@ router = APIRouter(prefix="/voices", tags=["voices"])
         500: {"model": ErrorResponse, "description": "Server error"},
     },
     summary="上传音色",
-    description="上传参考音频创建新的音色配置文件。如果不提供prompt_text，将自动使用ASR识别。"
+    description="上传参考音频创建新的音色配置文件。如果不提供prompt_text，将自动使用ASR识别。支持可选的 Podcast 元数据字段。"
 )
 async def create_voice(
     audio_file: UploadFile = File(..., description="参考音频文件"),
     voice_name: str = Form(..., min_length=1, max_length=100, description="音色名称"),
     prompt_text: Optional[str] = Form(None, description="参考音频对应的文本，不填则自动ASR识别"),
+    description: Optional[str] = Form(None, description="音色描述（Podcast 用）"),
+    suitable_for: Optional[str] = Form(None, description="适用场景，逗号分隔（如 daily,family）"),
+    for_podcast: bool = Form(False, description="是否适用于 Podcast"),
 ):
     """Create a new voice profile."""
     # Validate file type
@@ -81,6 +84,11 @@ async def create_voice(
         if audio_format not in ['wav', 'mp3', 'ogg', 'flac']:
             audio_format = 'wav'
         
+        # Parse suitable_for from comma-separated string
+        suitable_for_list = []
+        if suitable_for:
+            suitable_for_list = [s.strip() for s in suitable_for.split(",") if s.strip()]
+        
         # Create voice
         voice_service = get_voice_service()
         metadata = voice_service.create_voice(
@@ -88,6 +96,9 @@ async def create_voice(
             voice_name=voice_name,
             prompt_text=final_prompt_text,
             audio_format=audio_format,
+            description=description or "",
+            suitable_for=suitable_for_list,
+            for_podcast=for_podcast,
         )
         
         return VoiceResponse(

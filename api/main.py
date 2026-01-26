@@ -15,7 +15,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .config import settings
-from .routers import voices, tts, downloads
+from .routers import voices, tts, downloads, v2
 from .utils.cleanup import cleanup_task, get_audio_manager
 from .services.tts_service import get_tts_service
 
@@ -106,6 +106,7 @@ app.add_middleware(
 app.include_router(voices.router)
 app.include_router(tts.router)
 app.include_router(downloads.router)
+app.include_router(v2.router)
 
 
 @app.get("/", tags=["root"])
